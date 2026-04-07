@@ -4,8 +4,8 @@ import BrutalButton from "../ui/BrutalButton";
 
 export default function HeroBanner() {
   return (
-    <section className="min-h-[calc(100vh-72px)] flex items-center justify-center bg-cream px-4 py-12 relative overflow-hidden">
-      <div className="absolute inset-0 opacity-[0.03]">
+    <section className="min-h-[calc(100vh-72px)] flex items-center justify-center bg-cream relative overflow-hidden">
+      <div className="absolute inset-0 opacity-[0.08]">
         <div className="w-full h-full" style={{
           backgroundImage: `repeating-linear-gradient(
             0deg,
@@ -24,8 +24,11 @@ export default function HeroBanner() {
         }} />
       </div>
 
-      <div className="max-w-6xl mx-auto text-center relative z-10">
-        <div className="hero-container cursor-default">
+      <div className="max-w-6xl mx-auto relative z-10 text-center pb-24">
+        <div className="hero-container cursor-default mb-4">
+          <span className="font-mono text-xs uppercase tracking-widest text-brutal-red mb-2 block">
+            ⚠ Do not hover over this
+          </span>
           <span className="fashion font-mono text-6xl md:text-8xl lg:text-[12rem] font-bold uppercase leading-[0.85] tracking-tight block">
             FASHION
           </span>
@@ -36,7 +39,7 @@ export default function HeroBanner() {
 
         <p className="font-sans text-lg md:text-xl mb-8 max-w-xl mx-auto">
           Raw. High-contrast. Unapologetically ugly. 
-          Clothes for people who stopped caring about trends in 2024.
+          Clothes for people who stopped caring about trends in 2026.
         </p>
 
         <BrutalButton href="/shop" variant="accent" className="text-lg px-10 py-4">
@@ -44,7 +47,7 @@ export default function HeroBanner() {
         </BrutalButton>
       </div>
 
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-xs uppercase animate-bounce">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 font-mono text-xs uppercase animate-bounce z-20">
         Scroll down
       </div>
 
