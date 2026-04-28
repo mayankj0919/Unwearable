@@ -61,24 +61,28 @@ function generateOrderId(): string {
   return `UNW${ts}${rand}`.substring(0, 15);
 }
 
-async function getProductStoreSku(slug: string, colorId?: string): Promise<string | null> {
-  const { data, error } = await supabase
+async function getProductStoreSku(slug: string, colorId?: string, sizeId?: string): Promise<string | null> {
+  let query = supabase
     .from("products")
-    .select("sku, store_skus")
-    .eq("slug", slug)
-    .single();
+    .select("store_sku")
+    .eq("slug", slug);
+
+  if (colorId) {
+    query = query.eq("color", colorId);
+  }
+  
+  if (sizeId) {
+    query = query.eq("size", sizeId);
+  }
+
+  const { data, error } = await query.limit(1).single();
 
   if (error || !data) {
     console.error(`Failed to fetch SKU for slug ${slug}:`, error);
     return null;
   }
 
-  // Use variant-specific Store SKU if available, otherwise fall back to generic sku
-  if (colorId && data.store_skus && data.store_skus[colorId]) {
-    return data.store_skus[colorId];
-  }
-
-  return data.sku;
+  return data.store_sku;
 }
 
 const QIKINK_BASE_URL = process.env.QIKINK_API_URL || "https://api.qikink.com";
@@ -187,7 +191,7 @@ export async function POST(request: NextRequest) {
     // Build line items with variant-specific Store SKU lookup
     const lineItems: QikinkLineItem[] = await Promise.all(
       items.map(async (item) => {
-        const sku = await getProductStoreSku(item.slug, item.selectedColorId);
+        const sku = await getProductStoreSku(item.slug, item.selectedColorId, item.selectedSize);
         if (!sku) {
           throw new Error(`SKU not found for product: ${item.slug}`);
         }
@@ -200,13 +204,23 @@ export async function POST(request: NextRequest) {
       })
     );
 
+    // Sanitize and normalize customer input
+    const sanitizedEmail = customer.email.trim().toLowerCase();
+    const sanitizedName = customer.name.trim();
+    const sanitizedAddress = customer.address.trim().substring(0, 100); // Prevent overflow
+    const sanitizedCity = (customer.city || "").trim();
+    const sanitizedState = (customer.state || "Chhattisgarh").trim();
+
     // Split customer name into first/last
-    const nameParts = customer.name.trim().split(/\s+/);
+    const nameParts = sanitizedName.split(/\s+/);
     const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || firstName;
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : firstName;
 
     const orderNumber = generateOrderId();
     const totalOrderValue = body.totalOrderValue || lineItems.reduce((sum, li) => sum + li.price * li.quantity, 0);
+
+    const cleanPhone = customer.phone.replace(/\\D/g, "");
+    const cleanZip = parseInt(customer.pincode.replace(/\\D/g, ""), 10) || 0;
 
     const qikinkPayload: QikinkOrderPayload = {
       order_number: orderNumber,
@@ -217,13 +231,13 @@ export async function POST(request: NextRequest) {
       shipping_address: {
         first_name: firstName,
         last_name: lastName,
-        address1: customer.address,
+        address1: sanitizedAddress,
         address2: "",
-        phone: customer.phone,
-        email: customer.email,
-        city: customer.city || "",
-        zip: parseInt(customer.pincode, 10) || 0,
-        province: customer.state || "Chhattisgarh",
+        phone: cleanPhone,
+        email: sanitizedEmail,
+        city: sanitizedCity,
+        zip: cleanZip,
+        province: sanitizedState,
         country_code: "IN",
       },
     };
