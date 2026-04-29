@@ -1,30 +1,41 @@
 import { supabase } from "./supabase";
 import type { Product } from "@/types";
+import { products as localProducts } from "@/data/products";
 
 export async function getProducts(): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*");
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*");
 
-  if (error) {
-    throw new Error(error.message);
+    if (error || !data || data.length === 0) {
+      console.warn("No products found in Supabase or error occurred, using local data.");
+      return localProducts;
+    }
+
+    return data as Product[];
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    return localProducts;
   }
-
-  return data as Product[];
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("slug", slug)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("slug", slug)
+      .single();
 
-  if (error) {
-    return null;
+    if (error || !data) {
+      return localProducts.find(p => p.slug === slug) || null;
+    }
+
+    return data as Product;
+  } catch (error) {
+    return localProducts.find(p => p.slug === slug) || null;
   }
-
-  return data as Product;
 }
 export async function addProduct(
   productData: Omit<Product, "id" | "image">,

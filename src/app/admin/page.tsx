@@ -87,9 +87,22 @@ export default function AdminPage() {
       <h1 className="font-mono text-4xl md:text-5xl font-bold uppercase mb-2">
         Admin Panel
       </h1>
-      <p className="font-sans text-brutal-black/60 mb-8">
+      <p className="font-sans text-brutal-black/60 mb-6">
         Add products to the void
       </p>
+
+      {/* Tab navigation */}
+      <div className="flex border-brutal border-3 mb-8 overflow-hidden">
+        <div className="flex-1 px-6 py-3 font-mono text-sm uppercase bg-brutal-black text-cream border-r-brutal border-r-3">
+          Products
+        </div>
+        <a
+          href="/admin/templates"
+          className="flex-1 px-6 py-3 font-mono text-sm uppercase bg-cream text-brutal-black hover:bg-accent hover:text-cream transition-colors text-center"
+        >
+          Design Templates
+        </a>
+      </div>
 
       {success && (
         <motion.div

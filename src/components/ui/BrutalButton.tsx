@@ -9,8 +9,9 @@ interface BrutalButtonProps {
   onClick?: () => void;
   href?: string;
   className?: string;
-  variant?: "default" | "accent" | "toxic";
+  variant?: "default" | "accent" | "toxic" | "ghost";
   disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
 export default function BrutalButton({
@@ -20,6 +21,7 @@ export default function BrutalButton({
   className,
   variant = "default",
   disabled = false,
+  type = "submit",
 }: BrutalButtonProps) {
   const baseStyles = `
     inline-flex items-center justify-center
@@ -32,6 +34,7 @@ export default function BrutalButton({
     default: "bg-cream text-brutal-black hover:bg-brutal-black hover:text-cream",
     accent: "bg-accent text-cream hover:bg-brutal-black",
     toxic: "bg-toxic text-brutal-black hover:bg-brutal-black hover:text-toxic",
+    ghost: "bg-transparent text-brutal-black hover:bg-brutal-black/10",
   };
 
   const motionProps = {
@@ -50,6 +53,7 @@ export default function BrutalButton({
       style={{ boxShadow: "4px 4px 0 #0A0A0A" }}
       onClick={onClick}
       disabled={disabled}
+      type={type}
       {...motionProps}
     >
       {children}

@@ -8,6 +8,8 @@ interface OrderItem {
   price?: number;
   selectedSize?: string;
   selectedColorId?: string;
+  designId?: string;
+  designImageUrl?: string;
 }
 
 interface CustomerInfo {
@@ -31,6 +33,7 @@ interface QikinkLineItem {
   quantity: number;
   price: number;
   search_from_my_products: number;
+  print_file?: string; // design image URL for custom prints
 }
 
 interface QikinkShippingAddress {
@@ -61,28 +64,43 @@ function generateOrderId(): string {
   return `UNW${ts}${rand}`.substring(0, 15);
 }
 
+import { products as localProducts } from "@/data/products";
+
 async function getProductStoreSku(slug: string, colorId?: string, sizeId?: string): Promise<string | null> {
-  let query = supabase
-    .from("products")
-    .select("store_sku")
-    .eq("slug", slug);
+  try {
+    let query = supabase
+      .from("products")
+      .select("store_sku")
+      .eq("slug", slug);
 
-  if (colorId) {
-    query = query.eq("color", colorId);
-  }
-  
-  if (sizeId) {
-    query = query.eq("size", sizeId);
-  }
+    if (colorId) {
+      query = query.eq("color", colorId);
+    }
+    
+    if (sizeId) {
+      query = query.eq("size", sizeId);
+    }
 
-  const { data, error } = await query.limit(1).single();
+    const { data, error } = await query.limit(1).single();
 
-  if (error || !data) {
+    if (!error && data) {
+      return data.store_sku;
+    }
+
+    // Fallback to local products
+    const localProduct = localProducts.find(p => p.slug === slug);
+    if (localProduct) {
+      console.log(`Using local SKU for slug ${slug}: ${localProduct.sku}`);
+      return localProduct.sku;
+    }
+
     console.error(`Failed to fetch SKU for slug ${slug}:`, error);
     return null;
+  } catch (error) {
+    // Final fallback
+    const localProduct = localProducts.find(p => p.slug === slug);
+    return localProduct ? localProduct.sku : null;
   }
-
-  return data.store_sku;
 }
 
 const QIKINK_BASE_URL = process.env.QIKINK_API_URL || "https://api.qikink.com";
@@ -200,6 +218,7 @@ export async function POST(request: NextRequest) {
           quantity: item.quantity,
           price: item.price || 0,
           search_from_my_products: 1,
+          ...(item.designImageUrl && { print_file: item.designImageUrl }),
         };
       })
     );

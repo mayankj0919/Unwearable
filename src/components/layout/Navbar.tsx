@@ -4,10 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
+import { 
+  useUser,
+  SignInButton, 
+  UserButton 
+} from "@clerk/nextjs";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { totalItems } = useCart();
+  const { isSignedIn } = useUser();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-cream border-b-brutal border-brutal border-b-3">
@@ -37,6 +43,24 @@ export default function Navbar() {
               </span>
             )}
           </Link>
+
+          <div className="border-l-brutal border-l-2 pl-8 flex items-center">
+            {!isSignedIn ? (
+              <SignInButton mode="modal">
+                <button className="font-mono text-sm uppercase hover:text-accent transition-colors">
+                  Sign In
+                </button>
+              </SignInButton>
+            ) : (
+              <UserButton 
+                appearance={{
+                  elements: {
+                    userButtonBox: "border-brutal border-2 hover:scale-105 transition-transform",
+                  }
+                }}
+              />
+            )}
+          </div>
         </div>
 
         <button
@@ -85,6 +109,20 @@ export default function Navbar() {
                   </span>
                 )}
               </Link>
+              
+              <div className="pt-4 border-t-brutal border-t-3">
+                {!isSignedIn ? (
+                  <SignInButton mode="modal">
+                    <button className="w-full font-mono text-xl uppercase border-brutal border-3 p-4 text-center bg-accent text-cream hover:bg-brutal-black transition-colors">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                ) : (
+                  <div className="flex items-center justify-center p-4 border-brutal border-3 bg-cream">
+                    <UserButton showName />
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}

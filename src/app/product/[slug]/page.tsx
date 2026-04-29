@@ -1,13 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import BrutalButton from "@/components/ui/BrutalButton";
 import { getProductBySlug } from "@/lib/api";
+import { getTemplatesByProduct } from "@/lib/designApi";
 import { formatPrice } from "@/lib/utils";
 import { useCart } from "@/context/CartContext";
-import type { Product } from "@/types";
+import type { Product, Template } from "@/types";
 
 const SIZES = ["S", "M", "L", "XL", "XXL"];
 const COLORS = [
@@ -21,7 +22,9 @@ const VIEWS = ["Front", "Back"] as const;
 export default function ProductPage() {
   const params = useParams();
   const slug = params?.slug as string;
+  const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const { addItem } = useCart();
   
@@ -32,7 +35,12 @@ export default function ProductPage() {
 
   useEffect(() => {
     getProductBySlug(slug)
-      .then(setProduct)
+      .then((p) => {
+        setProduct(p);
+        if (p) {
+          getTemplatesByProduct(p.slug).then(setTemplates).catch(() => setTemplates([]));
+        }
+      })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -188,6 +196,16 @@ export default function ProductPage() {
           >
             {added ? "Added!" : "Add to Cart"}
           </BrutalButton>
+
+          {templates.length > 0 && (
+            <BrutalButton
+              variant="default"
+              onClick={() => router.push(`/customize/${templates[0].id}?product=${product!.slug}&size=${selectedSize}`)}
+              className="w-full md:w-auto"
+            >
+              ✦ Customize
+            </BrutalButton>
+          )}
         </div>
       </motion.div>
     </div>
