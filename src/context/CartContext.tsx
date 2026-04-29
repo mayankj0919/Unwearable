@@ -12,6 +12,8 @@ import type { Product, CartItem } from "@/types";
 interface AddToCartItem extends Product {
   selectedSize?: string;
   selectedColorId?: string;
+  designId?: string;
+  designImageUrl?: string;
 }
 
 type CartAction =
@@ -40,9 +42,11 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       const existingItem = state.items.find(
         (item) => item.id === action.payload.id && 
                   item.selectedSize === action.payload.selectedSize &&
-                  item.selectedColorId === action.payload.selectedColorId
+                  item.selectedColorId === action.payload.selectedColorId &&
+                  item.designId === action.payload.designId
       );
-      if (existingItem) {
+      if (existingItem && !action.payload.designId) {
+        // Only merge if it's a standard product without a unique design
         return {
           ...state,
           items: state.items.map((item) =>
@@ -60,7 +64,9 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           ...action.payload, 
           quantity: 1,
           selectedSize: action.payload.selectedSize || "L",
-          selectedColorId: action.payload.selectedColorId || "2"
+          selectedColorId: action.payload.selectedColorId || "2",
+          designId: action.payload.designId,
+          designImageUrl: action.payload.designImageUrl
         }],
       };
     }
